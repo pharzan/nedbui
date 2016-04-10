@@ -1,12 +1,71 @@
 var Datastore = require('nedb'),
-    jsons=require('./data.js'),
     fs = require('fs'),
     db = {};
 
-db.steps = new Datastore('data/steps.db');
-db.sets = new Datastore('data/sets.db');
-db.steps.loadDatabase();
-db.sets.loadDatabase();
+
+var cfg={
+	 path:'data/test00.db'
+}
+function dbService(cfg){
+    if (!(this instanceof dbService)) {
+    return new dbService();
+    }
+    
+    this.dbPath=cfg.path;
+    
+    /*
+     Constructor:
+     */
+    console.log(this.dbPath)
+    this.db=new Datastore({filename:this.dbPath, autoload: true });
+    this.db.loadDatabase(function(err){
+	console.log(err)
+    });
+    
+};
+
+
+dbService.prototype.load=function(query){
+    var self=this;
+    return new Promise(function(resolve) {
+        self.db.find(query, function(err, result) {
+            if (result.length == 0){
+		console.log('empty')
+                return resolve('empty');
+	    }
+	    console.log('data Fetched',result);
+	    resolve('done');
+        });
+    });
+}
+
+dbService.prototype.save=function (data) {
+    
+    this.db.insert(data, function(err, newData) { // Callback is optional
+	        // newDoc is the newly inserted document, including its _id
+	        // newDoc has no key called notToBeSaved since its value was undefined
+	console.log('inserted');
+	    });
+
+};
+dbService.prototype.updateByKey=function (existing,updateData){
+    /*
+     inserts or updates existing fields:
+     first argument is the existing data the second is the one to be updated or to be inserted 
+     */
+    this.db.update(existing, { $set: updateData }, { multi: true }, function (err, numReplaced) {
+	console.log('updated: ',numReplaced);
+  // numReplaced = 3
+  // Field 'system' on Mars, Earth, Jupiter now has value 'solar system'
+});
+
+}
+var testDB=new dbService(cfg);
+//console.log(testDB);
+
+//testDB.save({'name':'test'});
+testDB.load();
+testDB.updateByKey({name:''},{name:'Hello',test:'Blah'})
 
 function load(dbName, query) {
     // query={name:'checkTestTubes.json' };
@@ -49,25 +108,7 @@ function existsInDB(dbName, name) {
     
 }
 
-function save(dbName, data) {
 
-    var d = db[dbName];
-    
-    var exists=existsInDB(dbName,data.name).then(function(result){
-	
-	if(!result){
-	    
-	    d.insert(data, function(err, newDoc) { // Callback is optional
-	        // newDoc is the newly inserted document, including its _id
-	        // newDoc has no key called notToBeSaved since its value was undefined
-	        console.log('inserted');
-	    });
-
-	}
-    })
-    
-
-}
 
 function updateByName(name,updateData){
     
@@ -170,19 +211,10 @@ function batchFileRead(){
     });
 }
 
-//console.log('!!!!',Object.keys(jsons));
-// Object.keys(jsons).map(function(key,i){
-//     var data={
-// 	name:key,
-// 	content:jsons[key]
-//     };
-//     save('sets',data);
-// })
-	   
+function createDB(name,path){
+    db[name] = new Datastore(path);
+}
 
-//batchFileRead();
-	   
-//updateByName("",{categoery:"none"});
-//save('steps',data);
-removeById('sets','Tct8QIcGNeBkrJft')
-//load('sets',{});
+function loadDB(name,path){
+    db[name].loadDatabase();
+}
