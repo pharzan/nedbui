@@ -3,12 +3,10 @@ var Datastore = require('nedb'),
     db = {};
 
 
-var cfg={
-	 path:'data/test00.db'
-}
-function dbService(cfg){
+
+function dbService (cfg){
     if (!(this instanceof dbService)) {
-    return new dbService();
+    return new dbService(cfg);
     }
     
     this.dbPath=cfg.path;
@@ -23,7 +21,6 @@ function dbService(cfg){
     });
     
 };
-
 
 dbService.prototype.load=function(query){
     var self=this;
@@ -48,6 +45,11 @@ dbService.prototype.save=function (data) {
 	    });
 
 };
+
+dbService.prototype.update=function(data,options){
+
+};
+
 dbService.prototype.updateByKey=function (existing,updateData){
     /*
      inserts or updates existing fields:
@@ -55,17 +57,25 @@ dbService.prototype.updateByKey=function (existing,updateData){
      */
     this.db.update(existing, { $set: updateData }, { multi: true }, function (err, numReplaced) {
 	console.log('updated: ',numReplaced);
-  // numReplaced = 3
-  // Field 'system' on Mars, Earth, Jupiter now has value 'solar system'
-});
+	// numReplaced = 3
+	// Field 'system' on Mars, Earth, Jupiter now has value 'solar system'
+    });
 
-}
-var testDB=new dbService(cfg);
+};
+
+dbService.prototype.removeByKey=function(data){
+    this.db.remove(data, {}, function(err, numRemoved) {
+        console.log('Number Removed::', numRemoved);
+        console.log('removed');
+    });
+};
+
+
 //console.log(testDB);
-
-//testDB.save({'name':'test'});
-testDB.load();
-testDB.updateByKey({name:''},{name:'Hello',test:'Blah'})
+// testDB.save({'name':'test'});
+// testDB.load();
+// //testDB.updateByKey({name:'test'},{name:'Hello',test:'Blah'});
+// testDB.removeByKey({name:'Hello'});
 
 function load(dbName, query) {
     // query={name:'checkTestTubes.json' };
@@ -107,8 +117,6 @@ function existsInDB(dbName, name) {
     })
     
 }
-
-
 
 function updateByName(name,updateData){
     
@@ -167,54 +175,7 @@ function dataBuilder(content,fileName){
     return data;
 };
 
-function batchFileRead(){
 
-    var files = [
-    'urlHistory/checkUrlFoString.json', 'urlHistory/getUrlContent.json',
-    'urlHistory/getUrlResponse.json', 'urlHistory/goBackOne.json',
-    'urlHistory/goForwardOne.json', 'urlHistory/reload.json',
 
-    'urlCheck/urlCheck_az.json',  'urlCheck/urlCheck_Green.json',
-    'urlCheck/urlCheck_Red.json',  'urlCheck/urlCheck_Yellow.json',
 
-    'products/greenClick.json',  'products/productsClick.json',  'products/redClick.json',  'products/yellowClick.json',
-
-    'playCycleActions/01_waitForSubtitleButtons.json',
-    'playCycleActions/02_leftOptionClick.json',
-    'playCycleActions/02_rightOptionClick.json',
-    'playCycleActions/03_clickNext.json',
-
-    'lang/azeri.json',
-    
-    'checkTestTubesFalse.json',
-    'correctAnswerClick.json',
-    'infopanelClick.json',
-    'login.json',
-    'subtitlesShownCheck.json',
-    'wrongAnswerCycle.json',
-    'checkTestTubes.json',
-    'correctAnswerCycle.json',
-    'infopanel.json',
-    'network_answerCheck.json',
-    'timeOutWait.json',
-    'checkTitleBarComponents.json',
-    'getSessionCorrect.json', 'languageChangeAlbenian.json', 'network_timerCheck.json', 't.json',
-    'checkViewsIncrease.json', 'getSessionFail.json', 'leftCycle_2.json', 'playVideo.json', 'wrongAnswer_checkGreens.json',
-    'clickVoscreenIcon.json', 'incorrectAnswerClick.json', 'leftCycle.json', 'rightCycle.json', 'wrongAnswer_checkReds.json'
-];
-
-    files.forEach(function(file){
-	console.log('loading file:',file);
-	var testSteps=loadFromFile('jsons/'+file);
-	var stepsData=dataBuilder(testSteps,file);
-	save('steps',stepsData);
-    });
-}
-
-function createDB(name,path){
-    db[name] = new Datastore(path);
-}
-
-function loadDB(name,path){
-    db[name].loadDatabase();
-}
+exports.init=dbService
