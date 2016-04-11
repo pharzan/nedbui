@@ -14,6 +14,7 @@ io.on('connection', function(socket){
 });
 
 
+
 setInterval(function(){    
     io.emit('data',{a:'hello'});
 },1000);
